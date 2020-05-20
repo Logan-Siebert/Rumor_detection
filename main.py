@@ -95,8 +95,10 @@ rnn_data_test=[]
 #         post_text = pro.post_text_preprocess(temp,posts)
 #         #TF-IDF
 #         TF_IDF = tfidf.tfidf(post_text)
-#         tfidf_event.append(TF_IDF)
-#     rnn_data_train.append(tfidf_event)
+#         if(TF_IDF!=[]):
+#             tfidf_event.append(TF_IDF)
+#     if(tfidf_event!=[]):
+#         rnn_data_train.append(tfidf_event)
 #     posts=[]
 
 # for j in range(event_related_posts_test.shape[0]):
@@ -114,8 +116,10 @@ rnn_data_test=[]
 #         post_text = pro.post_text_preprocess(temp,posts)
 #         #TF-IDF
 #         TF_IDF = tfidf.tfidf(post_text)
-#         tfidf_event.append(TF_IDF)
-#     rnn_data_test.append(tfidf_event)
+#         if(TF_IDF!=[]):
+#             tfidf_event.append(TF_IDF)
+#     if(tfidf_event!=[]):
+#         rnn_data_test.append(tfidf_event)
 #     posts=[]
 
 # with open("training_event_time_series_tfidf.txt", "wb") as fp:
@@ -124,7 +128,7 @@ rnn_data_test=[]
 #       pickle.dump(rnn_data_test, fp)
 
 
-### load event time series txt files (to save time)
+## load event time series txt files (to save time)
 with open("training_event_time_series_tfidf.txt", "rb") as fp:   # Unpickling
           rnn_data_train=(pickle.load(fp))        
 with open("test_event_time_series_tfidf.txt", "rb") as fp:   # Unpickling
