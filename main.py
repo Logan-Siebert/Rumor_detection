@@ -59,7 +59,7 @@ event_ids_test = event_ids[0:N_test,:]
 #       EVENTS TIME SERIES CONSTRUCTION                                           #
 #                                                                                 #
 ###################################################################################
-N=10; # RNN reference length N
+N=20; # RNN reference length N
 #time_series_train = time.events_time_series(event_related_posts_train,N)
 #time_series_test = time.events_time_series(event_related_posts_test,N)
   

@@ -34,7 +34,10 @@ def tfidf(post_text):
     #IDF
     IDF={}
     for word in DF:
-        IDF[word]= m.log10(len(post_text)/DF[word])
+        if(len(post_text)>1):
+            IDF[word]= m.log10(len(post_text)/DF[word])
+        else:
+            IDF[word]=1
     
     tfidf = {}
     TF_IDF=[]
