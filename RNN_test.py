@@ -81,8 +81,8 @@ maxNrIntervals = max( len(max(rnn_data_train,key=len)), len(max(rnn_data_test,ke
 print("Largest # intervals in a single event = " + str(maxNrIntervals))
 
 
-k = 2500 #the number of tf.idf values sorted in descending order we will keep for each interval
-maxNrIntervals = 20 #equivalent to N value
+k = 5000 #the number of tf.idf values sorted in descending order we will keep for each interval
+maxNrIntervals = 30 #equivalent to N value
 
 print(maxNrIntervals)
 new_rnn_train = []
