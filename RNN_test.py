@@ -78,6 +78,35 @@ with open("Data/N30/test_event_time_series_tfidf.txt", "rb") as fp:   # Unpickli
 # pad the number of intervals (each event need same number of intervals)
 # put each event in a numpy array
 
+#Reshuffling the data to get a more even distribution of rumor and non-rumor event across training and test data
+
+import random
+reshuffled_labels = labels
+reshuffled_data = rnn_data_train.copy()
+reshuffled_data.extend(rnn_data_test)
+temp = list(zip(reshuffled_labels, reshuffled_data))
+
+random.shuffle(temp)
+reshuffled_labels, reshuffled_data = zip(*temp)
+reshuffled_labels = np.array(reshuffled_labels)
+
+labels_train= reshuffled_labels[N_test:reshuffled_labels.shape[0],:]
+labels_test= reshuffled_labels[0:N_test,:]
+
+rnn_data_train = [sublist for sublist in reshuffled_data[N_test:]]
+rnn_data_test = [sublist for sublist in reshuffled_data[0:N_test]]
+
+from sklearn.preprocessing import OneHotEncoder
+
+enc = OneHotEncoder()
+enc.fit(labels_train)
+labels_train = enc.transform(labels_train).toarray()
+enc.fit(labels_test)
+labels_test = enc.transform(labels_test).toarray()
+
+
+print(labels_train.shape)
+print(labels_test.shape)
 
 #Just checking what the max number of tf.idf values (maxK) inside any interval in the data is
 maxK = 0
