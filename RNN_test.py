@@ -39,9 +39,9 @@ rnn_data_test=[]
 
 
 ## load event time series txt files (to save time)
-with open("training_event_time_series_tfidf.txt", "rb") as fp:   # Unpickling
+with open("training_event_time_series_tfidf_N30.txt", "rb") as fp:   # Unpickling
           rnn_data_train=(pickle.load(fp))        
-with open("test_event_time_series_tfidf.txt", "rb") as fp:   # Unpickling
+with open("test_event_time_series_tfidf_N30.txt", "rb") as fp:   # Unpickling
           rnn_data_test=(pickle.load(fp))
           
           
@@ -59,18 +59,27 @@ maxNrIntervals = max( len(max(rnn_data_train,key=len)), len(max(rnn_data_test,ke
 print("Largest # intervals in a single event = " + str(maxNrIntervals))
 
 
+import sys
+
 k = 5000 #the number of tf.idf values sorted in descending order we will keep for each interval
-maxNrIntervals = 20 #equivalent to N value 
+maxNrIntervals = 30 #equivalent to N value 
 
 print(maxNrIntervals)
 new_rnn_train = []
 new_rnn_test = []
 #Processing Training Data
-for event in rnn_data_train:
+print("Start for train")
+for idx, event in enumerate(rnn_data_train):
+    sys.stdout.write("Progress: %d%%   \r" % (idx/len(rnn_data_train)*100) )
+    sys.stdout.flush()
     new_event = []
     for interval in event: 
-        kInterval = sorted(interval, reverse=True)[:k]
-        kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
+        highestVals = (-np.array(interval)).argsort()[:k]
+        kInterval = []
+        for i, val in enumerate(interval):
+            if (i in highestVals):
+               kInterval.append(val) 
+        kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k 
         new_event.append(kInterval)
         if len(new_event) == maxNrIntervals: break
     while len(new_event) < maxNrIntervals:
@@ -78,10 +87,17 @@ for event in rnn_data_train:
     new_rnn_train.append(new_event)
 
 #Processing Test Data
-for event in rnn_data_test:
+print("Start for test")
+for idx, event in enumerate(rnn_data_test):
+    sys.stdout.write("Progress: %d%%   \r" % (idx/len(rnn_data_test)*100) )
+    sys.stdout.flush()
     new_event = []
     for interval in event: 
-        kInterval = sorted(interval, reverse=True)[:k]
+        highestVals = (-np.array(interval)).argsort()[:k]
+        kInterval = []
+        for i, val in enumerate(interval):
+            if (i in highestVals):
+               kInterval.append(val) 
         kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
         new_event.append(kInterval)
         if len(new_event) == maxNrIntervals: break
@@ -90,7 +106,10 @@ for event in rnn_data_test:
     new_rnn_test.append(new_event)
         
 new_rnn_train = np.array(new_rnn_train) #convert the standard python lists to numpy arrays
+norm = np.linalg.norm(new_rnn_train)
+new_rnn_train = new_rnn_train/norm
 new_rnn_test = np.array(new_rnn_test)
+new_rnn_test = new_rnn_test/norm
 print(new_rnn_train.shape)
 print(new_rnn_test.shape)
 
@@ -100,21 +119,20 @@ tf.device('/gpu:1') #My best gpu is gpu:1, change to gpu:0 if you only have 1 gp
 CUDA_VISIBLE_DEVICES=1 
 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, LSTM, Embedding
+from tensorflow.keras.layers import Dense, Dropout, LSTM, Embedding, SimpleRNN
 
 model = Sequential()
 
-#model.add(Embedding(input_dim=k, output_dim=100, input_length=maxNrIntervals)) #no idea yet how to get this working for our input
-#model.add(LSTM(maxNrIntervals, input_shape=(new_rnn_train.shape[1:]), activation='relu', return_sequences=True))
-model.add(LSTM(maxNrIntervals, input_shape=(new_rnn_train.shape[1:])))
-#model.add(Dropout(0.2)) #is this really necessary?
+model.add(SimpleRNN(maxNrIntervals, activation='tanh',use_bias=True, kernel_initializer='uniform',
+                   recurrent_initializer='orthogonal', kernel_regularizer=tf.keras.regularizers.l2(l=1),
+                    bias_initializer='zeros',dropout=0.0, recurrent_dropout=0.0,
+                   return_sequences=False))
+model.add(Dense(2,activation='softmax', kernel_regularizer=tf.keras.regularizers.l2(l=1)))
 
-model.add(Dense(2, activation='softmax'))
-
-opt = tf.keras.optimizers.Adagrad(lr=0.5, decay=1e-6) #paper uses Adagrad instead of Adam with LR of 0.5 (no mention of decay rate)
-
+opt = tf.keras.optimizers.Adagrad(lr=0.1, initial_accumulator_value=0.9, epsilon=1e-07)
+#opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-5)
 model.compile(
-    loss='sparse_categorical_crossentropy', 
+    loss='categorical_crossentropy', 
     #this should be mse between the probability distributions of the prediction and ground truth + L2-regularization penalty
     optimizer=opt,
     metrics=['accuracy'],
@@ -123,6 +141,7 @@ model.compile(
 model.fit(new_rnn_train,
           labels_train,
           epochs=10,
+          batch_size=32,
           validation_data=(new_rnn_test, labels_test))
 
 
