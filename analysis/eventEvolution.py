@@ -21,7 +21,7 @@ def plotScatterTime(time_serie, interval):
     x = []
     x2 = []
     x3 = []
-    event = 20
+    event = 122
     scale = 2.5
 
     # Creating a figure --------------------------------------------------------

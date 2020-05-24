@@ -19,10 +19,6 @@ import processing.time_series_const as time
 import processing.post_text_preprocess as pro
 import processing.tfidf as tfidf
 
-#Visualization imports
-import analysis.eventEvolution as ev
-import analysis.plotAccuracy as pltA
-
 #np.set_printoptions(threshold=sys.maxsize)
 ###################################################################################
 #                                                                                 #
@@ -85,8 +81,8 @@ maxNrIntervals = max( len(max(rnn_data_train,key=len)), len(max(rnn_data_test,ke
 print("Largest # intervals in a single event = " + str(maxNrIntervals))
 
 
-k = 1000 #the number of tf.idf values sorted in descending order we will keep for each interval
-maxNrIntervals = 20 #equivalent to N value
+k = 5000 #the number of tf.idf values sorted in descending order we will keep for each interval
+maxNrIntervals = 30 #equivalent to N value
 
 print(maxNrIntervals)
 new_rnn_train = []
@@ -157,8 +153,6 @@ model.add(LSTM(maxNrIntervals, input_shape=(new_rnn_train.shape[1:])))
 model.add(Dense(2, activation='softmax'))
 
 opt = tf.keras.optimizers.Adagrad(lr=0.5, decay=1e-6) #paper uses Adagrad instead of Adam with LR of 0.5 (no mention of decay rate)
-# Displaying model information
-model.summary()
 
 model.compile(
     loss='sparse_categorical_crossentropy',
@@ -171,6 +165,7 @@ model.fit(new_rnn_train,
           labels_train,
           epochs=10,
           validation_data=(new_rnn_test, labels_test))
+
 
 ###################################################################################
 #                                                                                 #

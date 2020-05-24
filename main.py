@@ -29,6 +29,8 @@ import processing.tfidf as tfidf
 
 #Visualization imports
 import analysis.eventEvolution as ev
+import analysis.wordsEvolutionE as we
+
 
 #misc
 np.set_printoptions(precision=3)
@@ -162,7 +164,9 @@ with open("Data/N30/training_event_time_series_tfidf.txt", "rb") as fp:   # Unpi
 with open("Data/N30/test_event_time_series_tfidf.txt", "rb") as fp:   # Unpickling
           rnn_data_test=(pickle.load(fp))
 
-ev.plotScatterTime(rnn_data_train, 30)
+# ev.plotScatterTime(rnn_data_train, 30)
+
+we.plotEventsExpecteValue(rnn_data_train)
 # ev.plotScatterTime(time_serie)
 # Keep only the K-most important score per interval
 # pad the number of intervals (each event need same number of intervals)
