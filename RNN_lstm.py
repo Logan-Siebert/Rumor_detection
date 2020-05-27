@@ -1,7 +1,7 @@
 """
 File description : RNN implementation using Tesorflow2 for classification problem
-                   Architecture : Sequencial, one LSTM per time interval.
-                                  Two output dense unit for cathegorization.
+                   Architecture : sequencial RNN
+                                  LSTM - two embedding layers
 
                    Loss function : sparse_categorical_crossentropy
                    Optimizer : Adagrad
@@ -71,10 +71,7 @@ model = Sequential()
 
 # Building the model ------------------------------------------------------------
 
-"""
-    Simple RNN structure, no embedding layer
-                          one dense layer
-"""
+# Embedding layer - Reducing problem dimensionnability
 
 model.add(SimpleRNN(maxNrIntervals, activation='tanh',use_bias=True, kernel_initializer='uniform',
                    recurrent_initializer='orthogonal', kernel_regularizer=tf.keras.regularizers.l2(l=1),
@@ -86,6 +83,7 @@ model.add(Dense(2,activation='softmax', kernel_regularizer=tf.keras.regularizers
 
 opt = tf.keras.optimizers.Adagrad(lr=0.1, initial_accumulator_value=0.9, epsilon=1e-07)
 #opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-5)
+
 
 # Model compilation -------------------------------------------------------------
 
@@ -99,7 +97,7 @@ model.compile(
 model.fit(rnn_train,
           labels_train,
           epochs=10,
-          batch_size=64,
+          batch_size=10,
           validation_data=(rnn_test, labels_test))
 
 model.summary()
