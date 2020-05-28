@@ -17,12 +17,12 @@ import os
 import json as js
 import numpy as np
 import random
+import pickle
 from collections import OrderedDict
 
 #Text processing libs
 import gensim as gen  #doc2vec/word2vec lib
 from gensim.models import Doc2Vec as d2v
-
 import re             # Cleaning text
 
 """
@@ -32,7 +32,12 @@ import re             # Cleaning text
 
 PTH = '../Data/Twitter.txt'
 FILES = '../Data/TwitterData/tweets/'
+PATHMODEL ='../Data/TwitterData/Models/'
+PATHVEC = '../Data/TwitterData/Vectors/'
 
+# General parameters
+
+ANN_vector_size = 100
 
 ###################################################################################
 #                                                                                 #
@@ -53,6 +58,12 @@ def cleanText(text):
     """
 
     # Converting to lower cases and removing contractions, removing urls, hashtags, mentions
+
+    #DEBUG --> has to be improved
+    # [] Removal of one word text
+    # [] Some numbers are passing through
+    # [] Some twitter handles are passing through
+
     if isinstance(text, str) :
 
         to_match = ['http\S+',
@@ -64,9 +75,14 @@ def cleanText(text):
         text = re.sub(r"[^a-zA-Z]+", " ", text)
         text = re.sub(r"^\d+\s|\s\d+\s|\s\d+$", "", text)
         text = re.sub(r'^https?:\/\/.*[\r\n]*', '', text, flags=re.MULTILINE)
+        text = text.lower()
+        newString = ''
 
-        text.lower()
-        allWords = re.split(r'\W+', text)    #Regex word model
+        # allWords = re.split(r'\W+', text)    #Regex word model
+        # for i in range(len(allWords)):
+        #     allWords[i] = allWords[i].lower()
+        #     newString += allWords[i] + " "
+        #     print(newString)
 
         return text
     else :
@@ -90,6 +106,7 @@ label : label
 --> List of relevant twitter ids end --> \n
 """
 
+print("Loading twitter data ***.json --> labelled by ids Twitter.txt")
 with open(PTH) as rawTwitterFile :
 
     # Reading the file line per line
@@ -121,7 +138,11 @@ print("Training : " + str(len(trainingKeyList)) + "| Testing : " + str(len(testi
 dictTrain = OrderedDict(trainingKeyList)
 dictTest = OrderedDict(testingKeyList)
 
-#print(dictTrain.items())
+###################################################################################
+#                                                                                 #
+#       doc2vec                                                                   #
+#                                                                                 #
+###################################################################################
 
 # Creating doc2vec arrays ------------------------------------------------------
 
@@ -130,6 +151,7 @@ testArray = []
 count = 0
 tempDictionnary = {}
 
+countTrainingData = 0
 #Training Array
 for key, inf in dictTrain.items() :
 
@@ -147,10 +169,13 @@ for key, inf in dictTrain.items() :
             tweetContent = cleanText(twText[1])   #0 index is the date which we don't use, could be extracted as feature later
             if tweetContent is not None :
                 tempVector.append(tweetContent)
+        countTrainingData +=1
     trainArray.append(gen.models.doc2vec.LabeledSentence(tempVector, key))
-    print(trainArray)
+    #print(trainArray)
+    #print(trainArray[0][0][7])
 
 #Testing Array
+countTestingData = 0
 for key, inf in dictTest.items() :
 
     filepath = FILES + key + ".json"
@@ -167,11 +192,8 @@ for key, inf in dictTest.items() :
             tweetContent = cleanText(twText[1])   #0 index is the date which we don't use, could be extracted as feature later
             if tweetContent is not None :
                 tempVector.append(tweetContent)
+        countTestingData += 1
     testArray.append(gen.models.doc2vec.LabeledSentence(tempVector, key))
-    print(trainArray)
-
-
-# Serializing ------------------------------------------------------------------
 
 
 ###################################################################################
@@ -179,3 +201,110 @@ for key, inf in dictTest.items() :
 #       word2vec importance training                                              #
 #                                                                                 #
 ###################################################################################
+
+
+print("Training started ------- gensim ANN doc2vec model")
+maxEpoch = 200
+alpha = 0.025
+
+#Defining model
+model = gen.models.Doc2Vec(vector_size = ANN_vector_size,
+                alpha = alpha,
+                minAlpha = 0.00025,
+                minCount = 1,
+                dm = 1)
+model.build_vocab(trainArray)
+
+#Training doc2vec
+for epoch in range(maxEpoch):
+    print('Epoch :  {0}'.format(epoch), end='\r')
+    model.train(trainArray,
+                total_examples=model.corpus_count,
+                epochs=model.iter)
+    # decrease the learning rate
+    model.alpha -= 0.0002
+    # fix the learning rate, no decay
+    model.min_alpha = model.alpha
+
+pathModel = PATHMODEL + 'd2v.model'
+model.save(pathModel)
+
+
+# Creating the ANN inputs ------------------------------------------------------
+
+"""
+Creating input ANN vector : (amount of documents x ANN_vector_size)
+    For training and testing
+
+Creating output ANN vector : (amount of documents x 1)
+    For training and testing
+"""
+xTrain = np.zeros((len(trainArray), ANN_vector_size))      # Input values
+yTrain = np.zeros((len(trainArray)))      # Associated labels -- > 1D array
+
+xTest = np.zeros((len(testArray), ANN_vector_size))
+yTest = np.zeros((len(testArray)))
+
+# Infering associated vector from model and labelling vectors ------------------
+
+# Training
+it = 0
+for event in trainArray :
+    inputVector = model.infer_vector(event.words)
+    xTrain[it, ] = inputVector
+    #print(xTrain[it, ])
+    yTrain[it] = dic[event.tags][1]
+    #print(yTrain[it])
+    it+=1
+
+# Testing
+it = 0
+for event in testArray :
+    inputVector = model.infer_vector(event.words)
+    xTest[it, ] = inputVector
+    #print(xTrain[it, ])
+    yTest[it] = dic[event.tags][1]
+    #print(yTest[it])
+    it+=1
+
+
+# Serializing ------------------------------------------------------------------
+x_Path_training = PATHVEC + 'xTrain'
+y_Path_training = PATHVEC + 'yTrain'
+x_Path_testing = PATHVEC + 'xTest'
+y_Path_testing = PATHVEC + 'yTest'
+
+np.save(x_Path_training, xTrain)
+np.save(y_Path_training, yTrain)
+np.save(x_Path_testing, xTest)
+np.save(y_Path_testing, yTest)
+
+#Pickling can't be done on numpy arrays, just use the save function
+# with open(x_Path_training, "wb") as fp:
+#       pickle.dump(xTrain, fp)
+# with open(y_Path_training, "wb") as fp:
+#       pickle.dump(yTrain, fp)
+# with open(xTest, "wb") as fp:
+#       pickle.dump(xTest, fp)
+# with open(y_Path_testing, "wb") as fp:
+#       pickle.dump(yTest, fp)
+
+
+
+# Summary
+print("Model build --\n")
+print("========================================================================")
+print("    Training doc2vec : " + str(countTrainingData) + " ")
+print("    Testing doc2vec  : " + str(countTestingData)+ " ")
+print("\n")
+print("    Missing files : " + str(len(allKeys) - (countTrainingData + countTestingData)))
+print("------------------------------------------------------------------------")
+print("    Model : Epochs : " + str(maxEpoch) + "     Vect size : " + str(ANN_vector_size) + "     gensim LR : " + str(alpha))
+print("    Saved model at " + PATHMODEL)
+print("------------------------------------------------------------------------")
+print("    Saved infered ANN vectors : ")
+print("      xTraining at : " + x_Path_training)
+print("      yTraining at : " + y_Path_training)
+print("      xTesting at :  " + x_Path_testing)
+print("      yTesting at :  " + y_Path_testing)
+print("========================================================================")
