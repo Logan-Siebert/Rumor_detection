@@ -171,3 +171,21 @@ we.plotEventsExpecteValue(rnn_data_train)
 # Keep only the K-most important score per interval
 # pad the number of intervals (each event need same number of intervals)
 # put each event in a numpy array
+
+
+
+
+###################################################################################
+#                                                                                 #
+#       word2vec deeplearning methods                                             #
+#                                                                                 #
+###################################################################################
+
+
+"""
+The first approach of this project was to solve the classification problem by
+encoding the features of the problem in time series, and then using a recurrent
+neural network. Another approach would use the doc2vec method, reduction of the
+more local word2vec method, allowing to represent one entire post as a feature
+vector. 
+"""
