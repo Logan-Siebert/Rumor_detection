@@ -15,7 +15,7 @@ import numpy as np
 import sys
 
 # Variables
-N = 100
+N = 50
 #opti = "Adagrad"
 PATHVEC = 'Data/TwitterData/Vectors/'
 
@@ -40,9 +40,9 @@ yTest = tf.keras.utils.to_categorical(yTest)
 """
     normalized data = (Initial data - E(Initial data))/\sigma{Initial data}
 """
-print(xTrain)
-xTrain = (xTrain - np.mean(xTrain, axis=0))/(np.std(xTrain, axis=0))
-print(xTrain)
+# print(xTrain)
+# xTrain = (xTrain - np.mean(xTrain, axis=0))/(np.std(xTrain, axis=0))
+# print(xTrain)
 #Building model ----------------------------------------------------------------
 
 model = tf.keras.Sequential()
@@ -67,4 +67,4 @@ model.fit(x = xTrain,
           validation_data = (xTest, yTest),
           batch_size = 64,
           epochs = 100,
-          verbose = 2)
+          verbose = 1)

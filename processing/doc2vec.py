@@ -21,6 +21,7 @@ import pickle
 from collections import OrderedDict
 
 #Text processing libs
+import string
 import gensim as gen  #doc2vec/word2vec lib
 from gensim.models import Doc2Vec as d2v
 import re             # Cleaning text
@@ -37,7 +38,7 @@ PATHVEC = '../Data/TwitterData/Vectors/'
 
 # General parameters
 
-ANN_vector_size = 100
+ANN_vector_size = 50
 
 ###################################################################################
 #                                                                                 #
@@ -66,23 +67,25 @@ def cleanText(text):
 
     if isinstance(text, str) :
 
-        to_match = ['http\S+',
-            '@\S+',
-            '[0-9]+']
+        # Removing URLS
+        text = re.sub(r'http\S+|https\S+|www.\S+', '', text)
+        text = re.sub(r'pic.twitter\S+', '', text)
 
-        text = re.sub('|'.join(to_match), '', text)
+        #Removing twitter handles and hashtags
+        text = re.sub(r'@[A-Za-z0-9]+','',text)
+        text = re.sub(r'#[A-Za-z0-9]+','',text)
+
+        #Removing numbers and ponctuation
+        text  = "".join([char for char in text if char not in string.punctuation])
+        text = re.sub('[0-9]+', '', text)
         text = re.sub(r"\\xa0\S+", "", text)
-        text = re.sub(r"[^a-zA-Z]+", " ", text)
-        text = re.sub(r"^\d+\s|\s\d+\s|\s\d+$", "", text)
-        text = re.sub(r'^https?:\/\/.*[\r\n]*', '', text, flags=re.MULTILINE)
-        text = text.lower()
-        newString = ''
 
-        # allWords = re.split(r'\W+', text)    #Regex word model
-        # for i in range(len(allWords)):
-        #     allWords[i] = allWords[i].lower()
-        #     newString += allWords[i] + " "
-        #     print(newString)
+        # Removing automatic words, non-ascii and one-word word, setting to lowercase
+        text = ' '.join( [w for w in text.split() if len(w)>1] )
+        text = re.sub(r"[^a-zA-Z]+", " ", text)
+        text = re.sub(r"via", '', text)
+        text = text.lower()
+        #print(text)
 
         return text
     else :
@@ -204,7 +207,7 @@ for key, inf in dictTest.items() :
 
 
 print("Training started ------- gensim ANN doc2vec model")
-maxEpoch = 200
+maxEpoch = 500
 alpha = 0.025
 
 #Defining model
