@@ -181,6 +181,7 @@ def features_extract(event_related_posts,event_ids, time_series,RNN_data):
         filename = 'Weibo/%d.json' %int(event_ids[j]) #event
         with open(filename, 'r') as myfile:
             data=myfile.read()
+        myfile.close()
         posts = json.loads(data) #event related posts
         pre_event=[]
         event = (time_series[j])
@@ -211,14 +212,15 @@ def features_extract(event_related_posts,event_ids, time_series,RNN_data):
                 if elem !=' ' and elem not in not_text:
                     final_text= final_text + " " + elem    
             pre_event.append(final_text)
-        if len(set(pre_event)) != 1:
-            #Caculate Tfidf
-            vectorizer = CountVectorizer()
-            transformer = TfidfTransformer()
+        
+        #Caculate Tfidf
+        vectorizer = CountVectorizer()
+        transformer = TfidfTransformer()
+        try:
             tfsc = vectorizer.fit_transform(pre_event)
             tfidf = transformer.fit_transform(tfsc)
             RNN_data.append((tfidf.toarray()).tolist())
-        else:
+        except:
             RNN_data.append([0]*len(pre_event))
     
     
@@ -227,24 +229,25 @@ RNN_data_train = []
 RNN_data_val = []
 
 ## /!\ Very slow save txt files with pickle
-features_extract(event_related_posts_val,event_ids_val, time_series_val,RNN_data_val) 
-with open("RNN_data_val.txt", "wb") as fp:
-        pickle.dump(RNN_data_val, fp) 
-features_extract(event_related_posts_train,event_ids_train, time_series_train,RNN_data_train)    
-with open("RNN_data_train.txt", "wb") as fp:
-        pickle.dump(RNN_data_train, fp)
-features_extract(event_related_posts_test,event_ids_test, time_series_test,RNN_data_test) 
-with open("RNN_data_test.txt", "wb") as fp:
-        pickle.dump(RNN_data_test, fp)
+# features_extract(event_related_posts_test,event_ids_test, time_series_test,RNN_data_test) 
+# with open("RNN_data_test.txt", "wb") as fp:
+#         pickle.dump(RNN_data_test, fp)
+# features_extract(event_related_posts_val,event_ids_val, time_series_val,RNN_data_val) 
+# with open("RNN_data_val.txt", "wb") as fp:
+#         pickle.dump(RNN_data_val, fp) 
+# features_extract(event_related_posts_train,event_ids_train, time_series_train,RNN_data_train)    
+# with open("RNN_data_train.txt", "wb") as fp:
+#         pickle.dump(RNN_data_train, fp)
+
 
   
-## Load pickled text files      
-# with open("RNN_data_test.txt", "rb") as fp:   # Unpickling
-#           RNN_data_test=(pickle.load(fp))        
-# with open("RNN_data_val.txt", "rb") as fp:   # Unpickling
-#           RNN_data_val=(pickle.load(fp))
-# with open("RNN_data_train.txt", "rb") as fp:   # Unpickling
-#           RNN_data_train=(pickle.load(fp))        
+# Load pickled text files      
+with open("RNN_data_test.txt", "rb") as fp:   # Unpickling
+          RNN_data_test=(pickle.load(fp))        
+with open("RNN_data_val.txt", "rb") as fp:   # Unpickling
+          RNN_data_val=(pickle.load(fp))
+with open("RNN_data_train.txt", "rb") as fp:   # Unpickling
+          RNN_data_train=(pickle.load(fp))        
 
 ###################################################################################
 #                                                                                 #
@@ -252,131 +255,132 @@ with open("RNN_data_test.txt", "wb") as fp:
 #                                                                                 #
 ################################################################################### 
 
-## Sshuffling
-# labels= np.array(labels, dtype=int)
-# # Random data shuffling
-# reshuffled_labels = labels
-# reshuffled_data = RNN_data_train.copy()
-# reshuffled_data.extend(RNN_data_test)
-# reshuffled_data.extend(RNN_data_val)
-# temp = list(zip(reshuffled_labels, reshuffled_data))
+## Shuffling
+labels= np.array(labels, dtype=int)
+# Random data shuffling
+reshuffled_labels = labels
+reshuffled_data = RNN_data_train.copy()
+reshuffled_data.extend(RNN_data_test)
+reshuffled_data.extend(RNN_data_val)
+temp = list(zip(reshuffled_labels, reshuffled_data))
 
-# random.shuffle(temp)
-# reshuffled_labels, reshuffled_data = zip(*temp)
-# reshuffled_labels = np.array(reshuffled_labels)
+random.shuffle(temp)
+reshuffled_labels, reshuffled_data = zip(*temp)
+reshuffled_labels = np.array(reshuffled_labels)
 
-# labels_train= reshuffled_labels[0:N_train]
-# labels_test= reshuffled_labels[N_train:N_train+N_test]
-# labels_val= reshuffled_labels[N_train+N_test:]
+labels_train= reshuffled_labels[0:N_train]
+labels_test= reshuffled_labels[N_train:N_train+N_test]
+labels_val= reshuffled_labels[N_train+N_test:]
 
-# RNN_data_train = [sublist for sublist in reshuffled_data[0:N_train]]
-# RNN_data_test = [sublist for sublist in reshuffled_data[N_train:N_train+N_test]]
-# RNN_data_val = [sublist for sublist in reshuffled_data[N_train+N_test:]]
+RNN_data_train = [sublist for sublist in reshuffled_data[0:N_train]]
+RNN_data_test = [sublist for sublist in reshuffled_data[N_train:N_train+N_test]]
+RNN_data_val = [sublist for sublist in reshuffled_data[N_train+N_test:]]
 
-# ## Padding the RNN sequences
-# k = 1000 #the number of tf.idf values sorted in descending order we will keep for each interval
-# maxNrIntervals=N
+## Padding the RNN sequences
+k = 1500 #the number of tf.idf values sorted in descending order we will keep for each interval
+maxNrIntervals=N
 
-# new_rnn_train = []
-# new_rnn_test = []
-# new_rnn_val = []
-# # Processing Training Data
-# for event in RNN_data_train:
-#     new_event = []
-#     for interval in event: 
-#         if isinstance(interval, int):
-#             interval = [interval]
-#         kInterval = sorted(interval, reverse=True)[:k]
-#         kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
-#         new_event.append(kInterval[0:k])
-#         if len(new_event) == maxNrIntervals: break
-#     while len(new_event) < maxNrIntervals:
-#         new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
-#     new_rnn_train.append(new_event)
+new_rnn_train = []
+new_rnn_test = []
+new_rnn_val = []
+# Processing Training Data
+for event in RNN_data_train:
+    new_event = []
+    for interval in event: 
+        if isinstance(interval, int):
+            interval = [interval]
+        kInterval = sorted(interval, reverse=True)[:k]
+        kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
+        new_event.append(kInterval[0:k])
+        if len(new_event) == maxNrIntervals: break
+    while len(new_event) < maxNrIntervals:
+        new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
+    new_rnn_train.append(new_event)
 
-# for event in RNN_data_test:
-#     new_event = []
-#     for interval in event: 
-#         if isinstance(interval, int):
-#             interval = [interval]
-#         kInterval = sorted(interval, reverse=True)[:k]
-#         kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
-#         new_event.append(kInterval[0:k])
-#         if len(new_event) == maxNrIntervals: break
-#     while len(new_event) < maxNrIntervals:
-#         new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
-#     new_rnn_test.append(new_event)
+for event in RNN_data_test:
+    new_event = []
+    for interval in event: 
+        if isinstance(interval, int):
+            interval = [interval]
+        kInterval = sorted(interval, reverse=True)[:k]
+        kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
+        new_event.append(kInterval[0:k])
+        if len(new_event) == maxNrIntervals: break
+    while len(new_event) < maxNrIntervals:
+        new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
+    new_rnn_test.append(new_event)
     
-# for event in RNN_data_val:
-#     new_event = []
-#     for interval in event: 
-#         if isinstance(interval, int):
-#             interval = [interval]
-#         kInterval = sorted(interval, reverse=True)[:k]
-#         kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
-#         new_event.append(kInterval[0:k])
-#         if len(new_event) == maxNrIntervals: break
-#     while len(new_event) < maxNrIntervals:
-#         new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
-#     new_rnn_val.append(new_event)
+for event in RNN_data_val:
+    new_event = []
+    for interval in event: 
+        if isinstance(interval, int):
+            interval = [interval]
+        kInterval = sorted(interval, reverse=True)[:k]
+        kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
+        new_event.append(kInterval[0:k])
+        if len(new_event) == maxNrIntervals: break
+    while len(new_event) < maxNrIntervals:
+        new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
+    new_rnn_val.append(new_event)
  
-# ## One-hot encoding of the labels
-# labels_train =np.array(labels_train)
-# labels_test = np.array(labels_test)
-# #Convert labels to one-hot vector
-# labels_train_onehot = np.zeros((labels_train.shape[0],2))
-# for indx in range(labels_train.shape[0]):
-#     labels_train_onehot[indx,int(labels_train[indx])] = 1
+## One-hot encoding of the labels
+labels_train =np.array(labels_train)
+labels_test = np.array(labels_test)
+labels_val =np.array(labels_val)
+#Convert labels to one-hot vector
+labels_train_onehot = np.zeros((labels_train.shape[0],2))
+for indx in range(labels_train.shape[0]):
+    labels_train_onehot[indx,int(labels_train[indx])] = 1
     
-# labels_test_onehot = np.zeros((labels_test.shape[0],2))
-# for indx in range(labels_test.shape[0]):
-#     labels_test_onehot[indx,int(labels_test[indx])] = 1
+labels_test_onehot = np.zeros((labels_test.shape[0],2))
+for indx in range(labels_test.shape[0]):
+    labels_test_onehot[indx,int(labels_test[indx])] = 1
     
-# labels_val_onehot = np.zeros((labels_val.shape[0],2))
-# for indx in range(labels_val.shape[0]):
-#     labels_val_onehot[indx,int(labels_val[indx])] = 1
+labels_val_onehot = np.zeros((labels_val.shape[0],2))
+for indx in range(labels_val.shape[0]):
+    labels_val_onehot[indx,int(labels_val[indx])] = 1
     
 ###################################################################################
 #                                                                                 #
 #       RNN                                                                       #
 #                                                                                 #
 ################################################################################### 
-# embeddin_size=100
+embeddin_size=100
 
-# RNN_data_train=np.array(new_rnn_train)
-# RNN_data_test=np.array(new_rnn_test)
-# RNN_data_val=np.array(new_rnn_val)
+RNN_data_train=np.array(new_rnn_train)
+RNN_data_test=np.array(new_rnn_test)
+RNN_data_val=np.array(new_rnn_val)
 
-# # define the based sequential model
-# model = Sequential()
-# # RNN layer
-# model.add(Dense(embeddin_size, input_shape=(N,k)))
-# model.add(Dropout(0.3))
-# model.add(LSTM(N,input_shape = (N, embeddin_size),return_sequences=False))
-# # Output layer for classification
-# model.add(Dense(2, activation='softmax'))
-# model.summary()
+# define the based sequential model
+model = Sequential()
+# RNN layer
+model.add(Dense(embeddin_size, input_shape=(N,k)))
+model.add(Dropout(0.3))
+model.add(LSTM(N,input_shape = (N, embeddin_size),return_sequences=False))
+# Output layer for classification
+model.add(Dense(2, activation='softmax'))
+model.summary()
 
-# model.compile(
-#     loss='categorical_crossentropy',
-#     #optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.005, initial_accumulator_value=0.1, epsilon=1e-07),
-#     #optimizer= tf.keras.optimizers.Adam(lr=1e-2, decay=1e-5),
-#     optimizer=tf.keras.optimizers.RMSprop(lr=1e-3),
-#     regularizer=tf.keras.regularizers.l2(l=0.01),
-#     metrics=['accuracy'],
-# )
+model.compile(
+    loss='categorical_crossentropy',
+    #optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.005, initial_accumulator_value=0.1, epsilon=1e-07),
+    #optimizer= tf.keras.optimizers.Adam(lr=1e-2, decay=1e-5),
+    optimizer=tf.keras.optimizers.RMSprop(lr=1e-3),
+    regularizer=tf.keras.regularizers.l2(l=0.01),
+    metrics=['accuracy'],
+)
 
-# # Train and test the model
-# model.fit(RNN_data_train,
-#           labels_train_onehot,
-#           epochs=50,
-#           batch_size=32,
-#           validation_data=(RNN_data_test, labels_test_onehot))
+# Train and test the model
+model.fit(RNN_data_train,
+          labels_train_onehot,
+          epochs=50,
+          batch_size=32,
+          validation_data=(RNN_data_test, labels_test_onehot))
 
-# # Evaluate the model
-# pred = model.predict(RNN_data_val)
-# y_pred = np.argmax(pred, axis=1)
-# print("Accuracy={:.2f}".format(np.mean(pred ==labels_val_onehot )))
+# Evaluate the model
+pred = model.predict(RNN_data_val)
+y_pred = np.argmax(pred, axis=1)
+print("Accuracy={:.2f}".format(np.mean(pred ==labels_val_onehot )))
 
 
 
