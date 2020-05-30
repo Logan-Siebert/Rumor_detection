@@ -1,2 +1,9 @@
 opt arch MaxEpochs E(accuracy) S(accuracy) nb(experiments) lr embedding K reg dropout
-Adam SimpleRNN 10 0.6743 0.3371 2 0.001 100 2500 0.1 0.2
+Adam SimpleRNN 10 0.6691 0.0669 10 0.001 100 2500 0.1 0.1
+Adam SimpleRNN 10 0.681 0.0681 10 0.001 100 2500 0.1 0.2
+Adam SimpleRNN 10 0.6816 0.0682 10 0.001 100 2500 0.1 0.3
+Adam SimpleRNN 10 0.6679 0.0668 10 0.001 100 2500 0.1 0.4
+Adam SimpleRNN 10 0.6836 0.0684 10 0.001 100 2500 0.1 0.5
+Adam SimpleRNN 10 0.653 0.0653 10 0.001 100 2500 0.1 0.6
+Adam SimpleRNN 10 0.6583 0.0658 10 0.001 100 2500 0.1 0.7
+Adam SimpleRNN 10 0.6374 0.0637 10 0.001 100 2500 0.1 0.8

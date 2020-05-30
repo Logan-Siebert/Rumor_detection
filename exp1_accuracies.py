@@ -34,12 +34,12 @@ k = RNN_data_train.shape[2]
 
 embeddin_size=100
 
-amount_runs = 2
+amount_runs = 10
 count = 0
 accuracies = []
 
 learningRate = 1e-3
-dropout = 0.2
+dropout = 0.8
 lamb = 0.1
 
 maxEpochs = 10
