@@ -32,17 +32,22 @@ with open('labels_val_onehot.npy', 'rb') as f:
 N = RNN_data_train.shape[1]
 k = RNN_data_train.shape[2]
 
-embeddin_size=100
+embeddin_size = 100
 
-amount_runs = 10
+amount_runs = 2
 count = 0
-accuracies = []
+
+#Accuracies
+test_accuracies = []
+train_accuracies = []
+val_accuracies = []
+loss = []
 
 learningRate = 1e-3
-dropout = 0.8
-lamb = 0.1
+dropout = 0.3
+lamb = 0.001
 
-maxEpochs = 10
+maxEpochs = 5
 allEpochs = []
 arch = 0   # 0 --> simpleRNN, 1 --> LSTM, 2--> GRU
 opti = 'Adam'
@@ -75,15 +80,15 @@ if arch == 0 :
 
         model.compile(
             loss='categorical_crossentropy',
-            #optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.005, initial_accumulator_value=0.1, epsilon=1e-07),
-            optimizer= tf.keras.optimizers.Adam(lr=learningRate, decay=1e-5),
+            optimizer=tf.keras.optimizers.Adagrad(learning_rate=learningRate, initial_accumulator_value=0.1, epsilon=1e-07),
+            #optimizer= tf.keras.optimizers.Adam(lr=learningRate, decay=1e-5),
             #optimizer=tf.keras.optimizers.RMSprop(lr=1e-3),
             #regularizer=tf.keras.regularizers.l2(l=lamb),
             metrics=['accuracy'],
         )
 
         # Train and test the model
-        model.fit(RNN_data_train,
+        model_history = model.fit(RNN_data_train,
                   labels_train_onehot,
                   epochs=maxEpochs,
                   batch_size=32,
@@ -93,7 +98,13 @@ if arch == 0 :
         pred = model.predict(RNN_data_val)
         y_pred = np.argmax(pred, axis=1)
         lab= np.argmax(labels_val_onehot, axis=1)
-        accuracies.append(np.mean(y_pred ==lab))
+
+        #Recording accuracies
+        test_accuracies.append(np.mean(y_pred ==lab))
+        train_accuracies.append(np.mean(model_history.history["accuracy"]))
+        val_accuracies.append(np.mean(model_history.history["val_accuracy"]))
+        loss.append(np.mean(model_history.history["loss"]))
+
         print("Accuracy={:.2f}".format(np.mean(y_pred ==lab)))
         count += 1
 
@@ -124,7 +135,7 @@ if arch == 1 :
 
         model.compile(
             loss='categorical_crossentropy',
-            #optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.005, initial_accumulator_value=0.1, epsilon=1e-07),
+            # optimizer=tf.keras.optimizers.Adagrad(learning_rate=learningRate, initial_accumulator_value=0.1, epsilon=1e-07),
             optimizer= tf.keras.optimizers.Adam(lr=learningRate, decay=1e-5),
             #optimizer=tf.keras.optimizers.RMSprop(lr=1e-3),
             # regularizer=tf.keras.regularizers.l2(l=lamb),
@@ -132,7 +143,7 @@ if arch == 1 :
         )
 
         # Train and test the model
-        model.fit(RNN_data_train,
+        model_history = model.fit(RNN_data_train,
                   labels_train_onehot,
                   epochs=maxEpochs,
                   batch_size=32,
@@ -142,31 +153,31 @@ if arch == 1 :
         pred = model.predict(RNN_data_val)
         y_pred = np.argmax(pred, axis=1)
         lab= np.argmax(labels_val_onehot, axis=1)
-        accuracies.append(np.mean(y_pred ==lab))
+
+        #Recording accuracies
+        test_accuracies.append(np.mean(y_pred ==lab))
+        train_accuracies.append(np.mean(model_history.history["accuracy"]))
+        val_accuracies.append(np.mean(model_history.history["val_accuracy"]))
+        loss.append(np.mean(model_history.history["loss"]))
+
         print("Accuracy={:.2f}".format(np.mean(y_pred ==lab)))
         count += 1
 
 # Architecure GRU --------------------------------------------------------------
 
 
-if arch == 1 :
+if arch == 2 :
     while count < amount_runs :
         # define the based sequential model
-        model = Sequential()
-        # RNN layers
-        model.add(Dense(embeddin_size, input_shape=(N,k),
-                        kernel_regularizer = tf.keras.regularizers.l2(lamb))) #Embedding layer
-        model.add(GRU(N,
-                      input_shape = (N, embeddin_size),
-                      return_sequences=False,
-                      kernel_regularizer = tf.keras.regularizers.l2(lamb)))
-        model.add(Dropout(dropout)) #Dropout
 
+        model.add(Dense(embeddin_size, input_shape=(N,k), kernel_regularizer = tf.keras.regularizers.l2(lamb))) #Embedding layer
+        model.add(GRU(N,input_shape = (N, embeddin_size),return_sequences=True, kernel_regularizer = tf.keras.regularizers.l2(lamb)))
+        #model.add(Dropout(0.1)) #Dropout
+        model.add(GRU(N,input_shape = (N, embeddin_size),return_sequences=False,kernel_regularizer = tf.keras.regularizers.l2(lamb)))
+        #model.add(Dropout(0.1)) #Dropout
         # Output layer for classification
-        model.add(Dense(2, activation='softmax',
-                        kernel_regularizer = tf.keras.regularizers.l2(lamb)))
+        model.add(Dense(2, activation='softmax'))
         model.summary()
-
         # tf.keras.callbacks.EarlyStopping(
         #     monitor='val_loss', min_delta=0, patience=0, verbose=0, mode='auto',
         #     baseline=None, restore_best_weights=False
@@ -174,15 +185,15 @@ if arch == 1 :
 
         model.compile(
             loss='categorical_crossentropy',
-            #optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.005, initial_accumulator_value=0.1, epsilon=1e-07),
-            optimizer= tf.keras.optimizers.Adam(lr=learningRate, decay=1e-5),
+            optimizer=tf.keras.optimizers.Adagrad(learning_rate=learningRate, initial_accumulator_value=0.1, epsilon=1e-07),
+            #optimizer= tf.keras.optimizers.Adam(lr=learningRate, decay=1e-5),
             #optimizer=tf.keras.optimizers.RMSprop(lr=1e-3),
             # regularizer=tf.keras.regularizers.l2(l=lamb),
             metrics=['accuracy'],
         )
 
         # Train and test the model
-        model.fit(RNN_data_train,
+        model_history = model.fit(RNN_data_train,
                   labels_train_onehot,
                   epochs=maxEpochs,
                   batch_size=32,
@@ -192,31 +203,61 @@ if arch == 1 :
         pred = model.predict(RNN_data_val)
         y_pred = np.argmax(pred, axis=1)
         lab= np.argmax(labels_val_onehot, axis=1)
-        accuracies.append(np.mean(y_pred ==lab))
+
+        #Recording accuracies
+        test_accuracies.append(np.mean(y_pred ==lab))
+        train_accuracies.append(np.mean(model_history.history["accuracy"]))
+        val_accuracies.append(np.mean(model_history.history["val_accuracy"]))
+        loss.append(np.mean(model_history.history["loss"]))
+
         print("Accuracy={:.2f}".format(np.mean(y_pred ==lab)))
         count += 1
 
-E = 0
-S = 0
-print(accuracies)
+E_test = 0
+E_train = 0
+E_val = 0
+E_loss = 0
 
-#Mean over experiments
-for i in range(len(accuracies)) :
-    E += accuracies[i]
-E = E/len(accuracies)
+S_test = 0
+S_train = 0
 
-#\sigma^2 over experiments
-for i in range(len(accuracies)) :
-    S += (accuracies[i] - E)**2
-S = E/(len(accuracies))
+#Mean over testing accuracy
+for i in range(len(test_accuracies)) :
+    E_test += test_accuracies[i]
+E_test = E_test/len(test_accuracies)
+
+#Mean over testing accuracy
+for i in range(len(train_accuracies)) :
+    E_train += train_accuracies[i]
+E_train = E_train/len(train_accuracies)
+
+#Mean over val accuracy
+for i in range(len(val_accuracies)) :
+    E_val += val_accuracies[i]
+E_val = E_val/len(val_accuracies)
+
+#Mean over loss value
+for i in range(len(loss)) :
+    E_loss += loss[i]
+E_loss = E_loss/len(loss)
+
+#\sigma^2 over experiments - test
+for i in range(len(test_accuracies)) :
+    S_test += (test_accuracies[i] - E_test)**2
+S_test = E_test/(len(test_accuracies))
+
+#\sigma^2 over experiments - train
+for i in range(len(test_accuracies)) :
+    S_train += (test_accuracies[i] - E_train)**2
+S_train = E_train/(len(test_accuracies))
 
 
-print("E(Accuracy)" + str(E) + "Amount experiments : " + str(amount_runs))
+print("E(Accuracy)" + str(E_test) + "Amount experiments : " + str(amount_runs))
 
 # Saving results of experiment for Panda
 
 """
-opt arch MaxEpochs E(accuracy) S(accuracy) nb(experiments) lr embedding K reg dropout
+opt arch MaxEpochs E(test_accuracy) S(test_accuracy) E(train_accuracy) S(train_accuracy) E(val_accuracy) E(loss) nb(experiments) lr embedding K reg dropout
 """
 archi =''
 
@@ -227,6 +268,6 @@ if(arch == 1) :
 if(arch == 2) :
     archi = 'GRU'
 
-with open('experiments.csv', 'a') as file:
-    line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E, 4)) + ' '+ str(round(S, 4)) + ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
+with open('expData.csv', 'a') as file:
+    line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E_test, 5)) + ' ' + str(round(S_test, 5)) + ' ' + str(round(E_train, 5)) + ' ' + str(round(S_train, 5)) + ' ' + str(round(E_val, 5)) + ' ' + str(round(E_loss, 5)) + ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
     file.write(line)
