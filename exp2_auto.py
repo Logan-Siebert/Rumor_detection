@@ -33,7 +33,7 @@ N = RNN_data_train.shape[1]
 k = RNN_data_train.shape[2]
 
 learningRate = 1e-3
-while learningRate < 8e-3 :
+while learningRate < 9e-3 :
 
     N = RNN_data_train.shape[1]
     k = RNN_data_train.shape[2]
@@ -47,13 +47,14 @@ while learningRate < 8e-3 :
     test_accuracies = []
     train_accuracies = []
     val_accuracies = []
+    val_loss= []
 
     dropout = 0.3
     lamb = 0.001
 
     maxEpochs = 20
     allEpochs = []
-    arch = 0   # 0 --> simpleRNN, 1 --> LSTM, 2--> GRU
+    arch = 1   # 0 --> simpleRNN, 1 --> LSTM, 2--> GRU
     opti = 'Adam'
 
 
@@ -107,6 +108,8 @@ while learningRate < 8e-3 :
             test_accuracies.append(np.mean(y_pred ==lab))
             train_accuracies.append(np.mean(model_history.history["accuracy"]))
             val_accuracies.append(np.mean(model_history.history["val_accuracy"]))
+            val_loss.append(np.mean(model_history.history["loss"]))
+
 
             print("Accuracy={:.2f}".format(np.mean(y_pred ==lab)))
             count += 1
@@ -161,6 +164,8 @@ while learningRate < 8e-3 :
             test_accuracies.append(np.mean(y_pred ==lab))
             train_accuracies.append(np.mean(model_history.history["accuracy"]))
             val_accuracies.append(np.mean(model_history.history["val_accuracy"]))
+            val_loss.append(np.mean(model_history.history["loss"]))
+
 
             print("Accuracy={:.2f}".format(np.mean(y_pred ==lab)))
             count += 1
@@ -210,12 +215,15 @@ while learningRate < 8e-3 :
             test_accuracies.append(np.mean(y_pred ==lab))
             train_accuracies.append(np.mean(model_history.history["accuracy"]))
             val_accuracies.append(np.mean(model_history.history["val_accuracy"]))
+            val_loss.append(np.mean(model_history.history["loss"]))
+
             print("Accuracy={:.2f}".format(np.mean(y_pred ==lab)))
             count += 1
 
     E_test = 0
     E_train = 0
     E_val = 0
+    E_loss = 0
 
     S_test = 0
     S_train = 0
@@ -235,6 +243,11 @@ while learningRate < 8e-3 :
         E_val += val_accuracies[i]
     E_val = E_val/len(val_accuracies)
 
+    #Mean over loss value
+    for i in range(len(val_loss)) :
+        E_loss += val_loss[i]
+    E_loss = E_loss/len(val_loss)
+
     #\sigma^2 over experiments - test
     for i in range(len(test_accuracies)) :
         S_test += (test_accuracies[i] - E_test)**2
@@ -251,7 +264,7 @@ while learningRate < 8e-3 :
     # Saving results of experiment for Panda
 
     """
-    opt arch MaxEpochs E(test_accuracy) S(test_accuracy) E(train_accuracy) S(train_accuracy) E(val_accuracy) nb(experiments) lr embedding K reg dropout
+    opt arch MaxEpochs E(test_accuracy) S(test_accuracy) E(train_accuracy) S(train_accuracy) E(val_accuracy) E(loss) nb(experiments) lr embedding K reg dropout
     """
     archi =''
 
@@ -263,6 +276,6 @@ while learningRate < 8e-3 :
         archi = 'GRU'
 
     with open('expData.csv', 'a') as file:
-        line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E_test, 5)) + ' ' + str(round(S_test, 5)) + ' ' + str(round(E_train, 5)) + ' ' + str(round(S_train, 5)) + ' ' + str(round(E_val, 5)) + ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
+        line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E_test, 5)) + ' ' + str(round(S_test, 5)) + ' ' + str(round(E_train, 5)) + ' ' + str(round(S_train, 5)) + ' ' + str(round(E_val, 5)) + ' ' + str(round(E_loss, 5))+ ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
         file.write(line)
         learningRate += 1e-3
