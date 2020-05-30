@@ -67,31 +67,32 @@ labels_val= labels[N_train+N_test:]
 event_ids_val = event_ids[N_train+N_test:]  
 
 ### Extract timestamps   /!\ Reads lots of json files => save the 3 number arrays files for time saving
-#event_related_posts = array(event,posts time stamps)
-event_related_posts=np.zeros((n_ev,maxposts))
-i=0 
-j=0
-for event_id in event_ids:
-    filename = 'Weibo/%s.json' %event_id #event file with corresponding posts
-    with open(filename, 'r') as myfile:
-        data=myfile.read()
-    myfile.close()
-    posts = json.loads(data) #event related posts
-    for post in posts:
-        event_related_posts[i,j]=post['t'] #timestamp of post
-        j=j+1
-    event_related_posts[i]= np.sort(event_related_posts[i])
-    i=i+1
-    j=0
+#event_related_posts is an array(event,posts time stamps)
 
-event_related_posts_train=event_related_posts[0:N_train,:]
-event_related_posts_test=event_related_posts[N_train:N_train+N_test,:]
-event_related_posts_val=event_related_posts[N_train+N_test:,:]
+# event_related_posts=np.zeros((n_ev,maxposts))
+# i=0 
+# j=0
+# for event_id in event_ids:
+#     filename = 'Weibo/%s.json' %event_id #event file with corresponding posts
+#     with open(filename, 'r') as myfile:
+#         data=myfile.read()
+#     myfile.close()
+#     posts = json.loads(data) #event related posts
+#     for post in posts:
+#         event_related_posts[i,j]=post['t'] #timestamp of post
+#         j=j+1
+#     event_related_posts[i]= np.sort(event_related_posts[i])
+#     i=i+1
+#     j=0
+
+# event_related_posts_train=event_related_posts[0:N_train,:]
+# event_related_posts_test=event_related_posts[N_train:N_train+N_test,:]
+# event_related_posts_val=event_related_posts[N_train+N_test:,:]
 
 ### load pre-saved arrays for time saving
-# event_related_posts_train =np.load('event_related_posts_train.npy')
-# event_related_posts_test =np.load('event_related_posts_test.npy')
-# event_related_posts_val =np.load('event_related_posts_val.npy')
+event_related_posts_train =np.load('event_related_posts_train.npy')
+event_related_posts_test =np.load('event_related_posts_test.npy')
+event_related_posts_val =np.load('event_related_posts_val.npy')
 
 ###################################################################################
 #                                                                                 #
@@ -179,7 +180,7 @@ def features_extract(event_related_posts,event_ids, time_series,RNN_data):
     for j in range(event_related_posts.shape[0]):
         print("event: %d" %(j+1))
         filename = 'Weibo/%d.json' %int(event_ids[j]) #event
-        with open(filename, 'r') as myfile:
+        with open(filename, 'r', encoding="utf8") as myfile:
             data=myfile.read()
         myfile.close()
         posts = json.loads(data) #event related posts
@@ -203,7 +204,7 @@ def features_extract(event_related_posts,event_ids, time_series,RNN_data):
                             "]+", flags=re.UNICODE)
             emoji_pattern.sub(r'', text)   
             text = re.sub(r"[a-zA-Z_0-9]", " ", text)
-            not_text=["、","（",".","）",".....","?","“",".","《","》","！","'","”","`","•","з","☆","^","」"," ∠","，","[","]","(",")","：",";","；","/","！","？","-","@",":","。",",","·","…","→","_","=","】","【","∀","~","～","*"]
+            not_text=["、","（",".","）","+","😱","😔","⊙","#","❤",".....","?","“",".","《","》","！","'","”","`","•","з","☆","^","」"," ∠","，","[","]","(",")","：",";","；","/","！","？","-","@",":","。",",","·","…","→","_","=","】","【","∀","~","～","*"]
             analyzer = ChineseAnalyzer() #Chinese words parsing
             result = analyzer.parse(text)
             result = result.tokens() 
@@ -212,12 +213,11 @@ def features_extract(event_related_posts,event_ids, time_series,RNN_data):
                 if elem !=' ' and elem not in not_text:
                     final_text= final_text + " " + elem    
             pre_event.append(final_text)
-        
         #Caculate Tfidf
         vectorizer = CountVectorizer()
         transformer = TfidfTransformer()
         try:
-            tfsc = vectorizer.fit_transform(pre_event)
+            tfsc = vectorizer.fit_transform(pre_event)         
             tfidf = transformer.fit_transform(tfsc)
             RNN_data.append((tfidf.toarray()).tolist())
         except:
@@ -237,11 +237,9 @@ RNN_data_val = []
 #         pickle.dump(RNN_data_val, fp) 
 # features_extract(event_related_posts_train,event_ids_train, time_series_train,RNN_data_train)    
 # with open("RNN_data_train.txt", "wb") as fp:
-#         pickle.dump(RNN_data_train, fp)
-
-
+#         pickle.dump(RNN_data_train, fp) 
   
-# Load pickled text files      
+## Load pickled text files      
 with open("RNN_data_test.txt", "rb") as fp:   # Unpickling
           RNN_data_test=(pickle.load(fp))        
 with open("RNN_data_val.txt", "rb") as fp:   # Unpickling
@@ -277,7 +275,7 @@ RNN_data_test = [sublist for sublist in reshuffled_data[N_train:N_train+N_test]]
 RNN_data_val = [sublist for sublist in reshuffled_data[N_train+N_test:]]
 
 ## Padding the RNN sequences
-k = 1500 #the number of tf.idf values sorted in descending order we will keep for each interval
+k = 2500 #Vocabulary size
 maxNrIntervals=N
 
 new_rnn_train = []
@@ -353,10 +351,10 @@ RNN_data_val=np.array(new_rnn_val)
 
 # define the based sequential model
 model = Sequential()
-# RNN layer
-model.add(Dense(embeddin_size, input_shape=(N,k)))
-model.add(Dropout(0.3))
-model.add(LSTM(N,input_shape = (N, embeddin_size),return_sequences=False))
+# RNN layers
+model.add(Dense(embeddin_size, input_shape=(N,k))) #Embedding layer
+model.add(Dropout(0.3)) #Dropout
+model.add(LSTM(N,input_shape = (N, embeddin_size),return_sequences=False)) 
 # Output layer for classification
 model.add(Dense(2, activation='softmax'))
 model.summary()
@@ -364,23 +362,24 @@ model.summary()
 model.compile(
     loss='categorical_crossentropy',
     #optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.005, initial_accumulator_value=0.1, epsilon=1e-07),
-    #optimizer= tf.keras.optimizers.Adam(lr=1e-2, decay=1e-5),
-    optimizer=tf.keras.optimizers.RMSprop(lr=1e-3),
-    regularizer=tf.keras.regularizers.l2(l=0.01),
+    optimizer= tf.keras.optimizers.Adam(lr=1e-3, decay=1e-5),
+    #optimizer=tf.keras.optimizers.RMSprop(lr=1e-3),
+    #regularizer=tf.keras.regularizers.l2(l=0.1),
     metrics=['accuracy'],
 )
 
 # Train and test the model
 model.fit(RNN_data_train,
           labels_train_onehot,
-          epochs=50,
+          epochs=20,
           batch_size=32,
           validation_data=(RNN_data_test, labels_test_onehot))
 
 # Evaluate the model
 pred = model.predict(RNN_data_val)
 y_pred = np.argmax(pred, axis=1)
-print("Accuracy={:.2f}".format(np.mean(pred ==labels_val_onehot )))
+lab= np.argmax(labels_val_onehot, axis=1)
+print("Accuracy={:.2f}".format(np.mean(y_pred ==lab)))
 
 
 
