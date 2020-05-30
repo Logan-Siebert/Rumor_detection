@@ -36,19 +36,15 @@ yTest = tf.keras.utils.to_categorical(yTest)
 #                                                                                 #
 ###################################################################################
 
-# Normalizing data
-"""
-    normalized data = (Initial data - E(Initial data))/\sigma{Initial data}
-"""
-# print(xTrain)
-# xTrain = (xTrain - np.mean(xTrain, axis=0))/(np.std(xTrain, axis=0))
-# print(xTrain)
+
 #Building model ----------------------------------------------------------------
 
 model = tf.keras.Sequential()
+tf.device('/gpu:1') #My best gpu is gpu:1, change to gpu:0 if you only have 1 gpu
 
 #Input shape
 model.add(tf.keras.layers.BatchNormalization(batch_input_shape = (None, N)))
+model.add(tf.keras.layers.Dense(N + 50))
 model.add(tf.keras.layers.BatchNormalization())
 model.add(tf.keras.layers.Activation('relu'))
 
@@ -66,5 +62,7 @@ model.fit(x = xTrain,
           y = yTrain,
           validation_data = (xTest, yTest),
           batch_size = 64,
-          epochs = 100,
+          epochs = 150,
           verbose = 1)
+
+model.summary()

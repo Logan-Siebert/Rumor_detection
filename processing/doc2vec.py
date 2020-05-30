@@ -171,7 +171,7 @@ for key, inf in dictTrain.items() :
 
             tweetContent = cleanText(twText[1])   #0 index is the date which we don't use, could be extracted as feature later
             if tweetContent is not None :
-                tempVector.append(tweetContent)
+                tempVector.extend(tweetContent)
         countTrainingData +=1
     trainArray.append(gen.models.doc2vec.LabeledSentence(tempVector, key))
     #print(trainArray)
@@ -194,7 +194,7 @@ for key, inf in dictTest.items() :
 
             tweetContent = cleanText(twText[1])   #0 index is the date which we don't use, could be extracted as feature later
             if tweetContent is not None :
-                tempVector.append(tweetContent)
+                tempVector.extend(tweetContent)
         countTestingData += 1
     testArray.append(gen.models.doc2vec.LabeledSentence(tempVector, key))
 
@@ -207,7 +207,7 @@ for key, inf in dictTest.items() :
 
 
 print("Training started ------- gensim ANN doc2vec model")
-maxEpoch = 500
+maxEpoch = 9
 alpha = 0.025
 
 #Defining model
@@ -269,6 +269,13 @@ for event in testArray :
     yTest[it] = dic[event.tags][1]
     #print(yTest[it])
     it+=1
+
+# Normalizing ------------------------------------------------------------------
+# normTrain = np.linalg.norm(xTrain)
+# normTest = np.linalg.norm(xTest)
+#
+# xTrain = xTrain/normTrain
+# xTest = xTest/normTest
 
 
 # Serializing ------------------------------------------------------------------
