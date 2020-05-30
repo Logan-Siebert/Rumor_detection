@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 from tensorflow.keras.models import Sequential
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Dropout, LSTM, SimpleRNN, GRU
@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Dense, Dropout, LSTM, SimpleRNN, GRU
 #                                                                                 #
 #       RNN                                                                       #
 #                                                                                 #
-################################################################################### 
+###################################################################################
 
 #Load the preprocessed data
 
@@ -39,10 +39,15 @@ model = Sequential()
 # RNN layers
 model.add(Dense(embeddin_size, input_shape=(N,k))) #Embedding layer
 model.add(Dropout(0.3)) #Dropout
-model.add(LSTM(N,input_shape = (N, embeddin_size),return_sequences=False)) 
+model.add(LSTM(N,input_shape = (N, embeddin_size),return_sequences=False))
 # Output layer for classification
 model.add(Dense(2, activation='softmax'))
 model.summary()
+
+tf.keras.callbacks.EarlyStopping(
+    monitor='val_loss', min_delta=0, patience=0, verbose=0, mode='auto',
+    baseline=None, restore_best_weights=False
+)
 
 model.compile(
     loss='categorical_crossentropy',

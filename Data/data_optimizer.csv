@@ -1,0 +1,3 @@
+opt runs Eaccuracy Saccuracy epochs method
+'Adam' 20 
+'Adagra' 20
