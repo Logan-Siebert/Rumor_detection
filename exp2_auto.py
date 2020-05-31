@@ -9,6 +9,7 @@ File description : Running experiments for varying parameters to find optimal
 
 import numpy as np
 import os
+import math as m
 from tensorflow.keras.models import Sequential
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Dropout, LSTM, SimpleRNN, GRU
@@ -311,7 +312,7 @@ while k <= 5000 :
                 archi = 'GRU'
 
             with open('expData.csv', 'a') as file:
-                line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E_test, 5)) + ' ' + str(round(S_test, 5)) + ' ' + str(round(E_train, 5)) + ' ' + str(round(S_train, 5)) + ' ' + str(round(E_val, 5)) + ' ' + str(round(E_loss, 5))+ ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
+                line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E_test, 5)) + ' ' + str(round(m.sqrt(S_test), 5)) + ' ' + str(round(E_train, 5)) + ' ' + str(round(m.sqrt(S_train), 5)) + ' ' + str(round(E_val, 5)) + ' ' + str(round(E_loss, 5))+ ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
                 file.write(line)
 
             # Updating lambda reg
