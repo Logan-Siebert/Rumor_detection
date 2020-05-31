@@ -10,6 +10,7 @@ File description : Running experiments for varying parameters to find optimal
 
 
 import numpy as np
+import os
 from tensorflow.keras.models import Sequential
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Dropout, LSTM, SimpleRNN, GRU
@@ -20,16 +21,6 @@ from tensorflow.keras.layers import Dense, Dropout, LSTM, SimpleRNN, GRU
 ###################################################################################
 
 #Load the preprocessed data
-
-with open('RNN_data_train500.npy', 'rb') as f:
-    RNN_data_train = np.load(f)
-
-with open('RNN_data_test500.npy', 'rb') as f:
-    RNN_data_test = np.load(f)
-
-with open('RNN_data_val500.npy', 'rb') as f:
-    RNN_data_val = np.load(f)
-
 with open('labels_train_onehot.npy', 'rb') as f:
     labels_train_onehot = np.load(f)
 
@@ -39,9 +30,6 @@ with open('labels_test_onehot.npy', 'rb') as f:
 with open('labels_val_onehot.npy', 'rb') as f:
     labels_val_onehot = np.load(f)
 
-
-N = RNN_data_train.shape[1]
-k = RNN_data_train.shape[2]
 
 
 # Fixed experiment parameters
@@ -57,8 +45,34 @@ embeddin_size = 100
 
 # Has to be adapted to the way you handle K
 k = 500
-
 while k <= 5000 :
+
+    #loading data, files must exist (should implement exception handling)
+    fileNameTrain = 'RNN_data_train' + str(k) + '.npy'
+    fileNameTest = 'RNN_data_test' + str(k) + '.npy'
+    fileNameVal = 'RNN_data_val' + str(k) + '.npy'
+
+
+    if os.path.exists(fileNameTrain):
+       with open(fileNameTrain, 'rb') as f:
+           try:
+               RNN_data_train = np.load(f)
+           except :
+               print("Error : RNN_data_train for k : " + str(k) + "doesn't exist")
+
+    if os.path.exists(fileNameTest):
+       with open(fileNameTest, 'rb') as f:
+           try:
+               RNN_data_test = np.load(f)
+           except :
+               print("Error : RNN_data_test for k : " + str(k) + "doesn't exist")
+
+    if os.path.exists(fileNameVal):
+       with open(fileNameVal, 'rb') as f:
+           try:
+               RNN_data_val = np.load(f)
+           except :
+               print("Error : RNN_data_valfor k : " + str(k) + "doesn't exist")
 
     #Reshaping data
     N = RNN_data_train.shape[1]
@@ -71,7 +85,7 @@ while k <= 5000 :
 
         #Experiments through regularization \lambda values
         lamb = 0.00001
-        while lamb <= 0.001:
+        while lamb <= 0.001 :
             count = 0
 
             #Accuracies
