@@ -33,13 +33,13 @@ N = RNN_data_train.shape[1]
 k = RNN_data_train.shape[2]
 
 learningRate = 1e-3
-while learningRate < 10e-3 :
+while learningRate <= 5e-3 :
 
     N = RNN_data_train.shape[1]
     k = RNN_data_train.shape[2]
 
     embeddin_size = 100
-    amount_runs = 5
+    amount_runs = 10
     count = 0
     embeddin_size = 100
 
@@ -49,12 +49,12 @@ while learningRate < 10e-3 :
     val_accuracies = []
     val_loss= []
 
-    dropout = 0.3
-    lamb = 0.001
+    dropout = 0.2      #Dropout goodpractice ~20%
+    lamb = 0.00001
 
     maxEpochs = 100
     allEpochs = []
-    arch = 2   # 0 --> simpleRNN, 1 --> LSTM, 2--> GRU
+    arch = 1  # 0 --> simpleRNN, 1 --> LSTM, 2--> GRU
     opti = 'Adam'
 
 
@@ -96,7 +96,7 @@ while learningRate < 10e-3 :
             model_history = model.fit(RNN_data_train,
                       labels_train_onehot,
                       epochs=maxEpochs,
-                      batch_size=32,
+                      batch_size=64,
                       validation_data=(RNN_data_test, labels_test_onehot))
 
             # Evaluate the model
@@ -279,4 +279,4 @@ while learningRate < 10e-3 :
     with open('expData.csv', 'a') as file:
         line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E_test, 5)) + ' ' + str(round(S_test, 5)) + ' ' + str(round(E_train, 5)) + ' ' + str(round(S_train, 5)) + ' ' + str(round(E_val, 5)) + ' ' + str(round(E_loss, 5))+ ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
         file.write(line)
-        learningRate += 2e-3
+        learningRate += 1e-3
