@@ -50,7 +50,7 @@ model = tf.keras.Sequential()
 #Input shape
 model.add(tf.keras.layers.BatchNormalization(batch_input_shape = (None, N)))
 model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Activation('tanh'))
+model.add(tf.keras.layers.Activation('relu'))
 
 #Output
 model.add(tf.keras.layers.Dense(2))

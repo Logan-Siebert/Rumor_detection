@@ -7,13 +7,12 @@ File description : Running experiments for varying parameters to find optimal
                    reg_lambda -> 0.00001 -> 0.0001 -> 0.001
 """
 
-
-
 import numpy as np
 import os
 from tensorflow.keras.models import Sequential
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Dropout, LSTM, SimpleRNN, GRU
+
 ###################################################################################
 #                                                                                 #
 #       RNN                                                                       #
@@ -287,12 +286,12 @@ while k <= 5000 :
             #\sigma^2 over experiments - test
             for i in range(len(test_accuracies)) :
                 S_test += (test_accuracies[i] - E_test)**2
-            S_test = E_test/(len(test_accuracies))
+            S_test = S_test/(len(test_accuracies))
 
             #\sigma^2 over experiments - train
             for i in range(len(test_accuracies)) :
                 S_train += (test_accuracies[i] - E_train)**2
-            S_train = E_train/(len(test_accuracies))
+            S_train = S_train/(len(test_accuracies))
 
 
             print("E(Accuracy)" + str(E_test) + "Amount experiments : " + str(amount_runs))
@@ -314,7 +313,6 @@ while k <= 5000 :
             with open('expData.csv', 'a') as file:
                 line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E_test, 5)) + ' ' + str(round(S_test, 5)) + ' ' + str(round(E_train, 5)) + ' ' + str(round(S_train, 5)) + ' ' + str(round(E_val, 5)) + ' ' + str(round(E_loss, 5))+ ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
                 file.write(line)
-                learningRate += 1e-3
 
             # Updating lambda reg
             lamb = lamb*10

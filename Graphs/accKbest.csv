@@ -1,0 +1,4 @@
+opt arch MaxEpochs E(test_accuracy) S(test_accuracy) E(train_accuracy) S(train_accuracy) E(val_accuracy) E(loss) nb(experiments) lr embedding K reg dropout
+Adam LSTM 100 0.69229 0.13846 0.69189 0.13838 0.69839 0.60098 5 0.003 100 2500 0.001 0.3 
+Adam SimpleRNN 100 0.7 0.14 0.67777 0.13555 0.70541 0.80878 5 0.001 100 2500 0.001 0.3
+Adam GRU 100 0.68086 0.13617 0.65742 0.13148 0.67486 0.64214 5 0.005 100 2500 0.0001 0.3
