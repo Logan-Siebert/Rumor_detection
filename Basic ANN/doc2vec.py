@@ -282,16 +282,6 @@ np.save(y_Path_training, yTrain)
 np.save(x_Path_testing, xTest)
 np.save(y_Path_testing, yTest)
 
-#Pickling can't be done on numpy arrays, just use the save function
-# with open(x_Path_training, "wb") as fp:
-#       pickle.dump(xTrain, fp)
-# with open(y_Path_training, "wb") as fp:
-#       pickle.dump(yTrain, fp)
-# with open(xTest, "wb") as fp:
-#       pickle.dump(xTest, fp)
-# with open(y_Path_testing, "wb") as fp:
-#       pickle.dump(yTest, fp)
-
 
 
 # Summary
