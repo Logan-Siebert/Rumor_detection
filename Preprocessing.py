@@ -112,89 +112,90 @@ RNN_data_test = [sublist for sublist in reshuffled_data[N_train:N_train+N_test]]
 RNN_data_val = [sublist for sublist in reshuffled_data[N_train+N_test:]]
 
 ## Padding the RNN sequences
-k = 2500 #Vocabulary size
-maxNrIntervals=N
+kVals = [500, 2500, 5000]
+for k in kVals:
+    maxNrIntervals=N
 
-new_rnn_train = []
-new_rnn_test = []
-new_rnn_val = []
-# Processing Training Data
-for event in RNN_data_train:
-    new_event = []
-    for interval in event: 
-        if isinstance(interval, int):
-            interval = [interval]
-        kInterval = sorted(interval, reverse=True)[:k]
-        kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
-        new_event.append(kInterval[0:k])
-        if len(new_event) == maxNrIntervals: break
-    while len(new_event) < maxNrIntervals:
-        new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
-    new_rnn_train.append(new_event)
+    new_rnn_train = []
+    new_rnn_test = []
+    new_rnn_val = []
+    # Processing Training Data
+    for event in RNN_data_train:
+        new_event = []
+        for interval in event: 
+            if isinstance(interval, int):
+                interval = [interval]
+            kInterval = sorted(interval, reverse=True)[:k]
+            kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
+            new_event.append(kInterval[0:k])
+            if len(new_event) == maxNrIntervals: break
+        while len(new_event) < maxNrIntervals:
+            new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
+        new_rnn_train.append(new_event)
 
-for event in RNN_data_test:
-    new_event = []
-    for interval in event: 
-        if isinstance(interval, int):
-            interval = [interval]
-        kInterval = sorted(interval, reverse=True)[:k]
-        kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
-        new_event.append(kInterval[0:k])
-        if len(new_event) == maxNrIntervals: break
-    while len(new_event) < maxNrIntervals:
-        new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
-    new_rnn_test.append(new_event)
+    for event in RNN_data_test:
+        new_event = []
+        for interval in event: 
+            if isinstance(interval, int):
+                interval = [interval]
+            kInterval = sorted(interval, reverse=True)[:k]
+            kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
+            new_event.append(kInterval[0:k])
+            if len(new_event) == maxNrIntervals: break
+        while len(new_event) < maxNrIntervals:
+            new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
+        new_rnn_test.append(new_event)
+        
+    for event in RNN_data_val:
+        new_event = []
+        for interval in event: 
+            if isinstance(interval, int):
+                interval = [interval]
+            kInterval = sorted(interval, reverse=True)[:k]
+            kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
+            new_event.append(kInterval[0:k])
+            if len(new_event) == maxNrIntervals: break
+        while len(new_event) < maxNrIntervals:
+            new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
+        new_rnn_val.append(new_event)
     
-for event in RNN_data_val:
-    new_event = []
-    for interval in event: 
-        if isinstance(interval, int):
-            interval = [interval]
-        kInterval = sorted(interval, reverse=True)[:k]
-        kInterval.extend([0]*(k-len(kInterval))) #append the interval with zeros until it has a length of k
-        new_event.append(kInterval[0:k])
-        if len(new_event) == maxNrIntervals: break
-    while len(new_event) < maxNrIntervals:
-        new_event.append([0]*k) #append the event with intervals of zeros until it has a length of maxNrIntervals
-    new_rnn_val.append(new_event)
- 
-## One-hot encoding of the labels
-labels_train =np.array(labels_train)
-labels_test = np.array(labels_test)
-labels_val =np.array(labels_val)
-#Convert labels to one-hot vector
-labels_train_onehot = np.zeros((labels_train.shape[0],2))
-for indx in range(labels_train.shape[0]):
-    labels_train_onehot[indx,int(labels_train[indx])] = 1
-    
-labels_test_onehot = np.zeros((labels_test.shape[0],2))
-for indx in range(labels_test.shape[0]):
-    labels_test_onehot[indx,int(labels_test[indx])] = 1
-    
-labels_val_onehot = np.zeros((labels_val.shape[0],2))
-for indx in range(labels_val.shape[0]):
-    labels_val_onehot[indx,int(labels_val[indx])] = 1
-    
+    ## One-hot encoding of the labels
+    labels_train =np.array(labels_train)
+    labels_test = np.array(labels_test)
+    labels_val =np.array(labels_val)
+    #Convert labels to one-hot vector
+    labels_train_onehot = np.zeros((labels_train.shape[0],2))
+    for indx in range(labels_train.shape[0]):
+        labels_train_onehot[indx,int(labels_train[indx])] = 1
+        
+    labels_test_onehot = np.zeros((labels_test.shape[0],2))
+    for indx in range(labels_test.shape[0]):
+        labels_test_onehot[indx,int(labels_test[indx])] = 1
+        
+    labels_val_onehot = np.zeros((labels_val.shape[0],2))
+    for indx in range(labels_val.shape[0]):
+        labels_val_onehot[indx,int(labels_val[indx])] = 1
+        
 
-RNN_data_train=np.array(new_rnn_train)
-RNN_data_test=np.array(new_rnn_test)
-RNN_data_val=np.array(new_rnn_val)
+    RNN_data_train=np.array(new_rnn_train)
+    RNN_data_test=np.array(new_rnn_test)
+    RNN_data_val=np.array(new_rnn_val)
 
-with open('RNN_data_train.npy', 'wb') as f:
-    np.save(f, RNN_data_train)
+    with open('RNN_data_train' + str(k) + '.npy', 'wb') as f:
+        np.save(f, RNN_data_train)
 
-with open('RNN_data_test.npy', 'wb') as f:
-    np.save(f, RNN_data_test)
+    with open('RNN_data_test' + str(k) + '.npy', 'wb') as f:
+        np.save(f, RNN_data_test)
 
-with open('RNN_data_val.npy', 'wb') as f:
-    np.save(f, RNN_data_val)
+    with open('RNN_data_val' + str(k) + '.npy', 'wb') as f:
+        np.save(f, RNN_data_val)
 
-with open('labels_train_onehot.npy', 'wb') as f:
-    np.save(f, labels_train_onehot)
+    with open('labels_train_onehot' + str(k) + '.npy', 'wb') as f:
+        np.save(f, labels_train_onehot)
 
-with open('labels_test_onehot.npy', 'wb') as f:
-    np.save(f, labels_test_onehot)
+    with open('labels_test_onehot' + str(k) + '.npy', 'wb') as f:
+        np.save(f, labels_test_onehot)
 
-with open('labels_val_onehot.npy', 'wb') as f:
-    np.save(f, labels_val_onehot)
+    with open('labels_val_onehot' + str(k) + '.npy', 'wb') as f:
+        np.save(f, labels_val_onehot)
 
