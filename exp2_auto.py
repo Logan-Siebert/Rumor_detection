@@ -33,13 +33,13 @@ N = RNN_data_train.shape[1]
 k = RNN_data_train.shape[2]
 
 learningRate = 1e-3
-while learningRate < 9e-3 :
+while learningRate < 10e-3 :
 
     N = RNN_data_train.shape[1]
     k = RNN_data_train.shape[2]
 
     embeddin_size = 100
-    amount_runs = 10
+    amount_runs = 5
     count = 0
     embeddin_size = 100
 
@@ -52,9 +52,9 @@ while learningRate < 9e-3 :
     dropout = 0.3
     lamb = 0.001
 
-    maxEpochs = 20
+    maxEpochs = 100
     allEpochs = []
-    arch = 1   # 0 --> simpleRNN, 1 --> LSTM, 2--> GRU
+    arch = 2   # 0 --> simpleRNN, 1 --> LSTM, 2--> GRU
     opti = 'Adam'
 
 
@@ -176,14 +176,15 @@ while learningRate < 9e-3 :
     if arch == 2 :
         while count < amount_runs :
             # define the based sequential model
+            model = Sequential()
 
             model.add(Dense(embeddin_size, input_shape=(N,k), kernel_regularizer = tf.keras.regularizers.l2(lamb))) #Embedding layer
             model.add(GRU(N,input_shape = (N, embeddin_size),return_sequences=True, kernel_regularizer = tf.keras.regularizers.l2(lamb)))
-            #model.add(Dropout(0.1)) #Dropout
+            #model.add(Dropout(dropout)) #Dropout
             model.add(GRU(N,input_shape = (N, embeddin_size),return_sequences=False,kernel_regularizer = tf.keras.regularizers.l2(lamb)))
-            #model.add(Dropout(0.1)) #Dropout
+            #model.add(Dropout(dropout)) #Dropout
             # Output layer for classification
-            model.add(Dense(2, activation='softmax'))
+            model.add(Dense(2, activation='softmax',kernel_regularizer = tf.keras.regularizers.l2(lamb)))
             model.summary()
             # tf.keras.callbacks.EarlyStopping(
             #     monitor='val_loss', min_delta=0, patience=0, verbose=0, mode='auto',
@@ -278,4 +279,4 @@ while learningRate < 9e-3 :
     with open('expData.csv', 'a') as file:
         line = opti + ' ' + archi + ' ' + str(maxEpochs) + ' ' + str(round(E_test, 5)) + ' ' + str(round(S_test, 5)) + ' ' + str(round(E_train, 5)) + ' ' + str(round(S_train, 5)) + ' ' + str(round(E_val, 5)) + ' ' + str(round(E_loss, 5))+ ' ' + str(count) + ' ' + str(learningRate) + ' ' + str(embeddin_size) + ' ' + str(k) + ' ' + str(lamb) + ' ' + str(dropout) + '\n'
         file.write(line)
-        learningRate += 1e-3
+        learningRate += 2e-3
